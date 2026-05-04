@@ -21,4 +21,8 @@ export abstract class BaseResource implements IResource {
   protected detailUrl(elibId: string): string {
     return `${this.BASE_URL}/thebookshelf/showdocs/${this.bookshelfId}/${elibId}`;
   }
+
+  protected friendlyDetailUrl(elibId: string): string {
+    return `${this.BASE_URL}/thebookshelf/showdocsfriendly/${this.bookshelfId}/${elibId}`;
+  }
 }

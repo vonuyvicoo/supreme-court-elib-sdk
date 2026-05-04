@@ -17,7 +17,7 @@ export class DecisionsResource extends BaseResource {
   }
 
   async getDocumentById(elibId: string): Promise<ELibDocumentDetail> {
-    const html = await this.httpClient.get(this.detailUrl(elibId));
+    const html = await this.httpClient.get(this.friendlyDetailUrl(elibId));
     return this.detailParser.parse(html, elibId, this.bookshelfId);
   }
 }

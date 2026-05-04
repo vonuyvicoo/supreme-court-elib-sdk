@@ -6,39 +6,23 @@ const BASE_URL = 'https://elibrary.judiciary.gov.ph';
 
 // Matches: [ G.R. No. 266431, January 29, 2026 ]
 const HEADER_REGEX = /\[\s*(.*?),\s*([A-Z][a-z]+)\s+(\d{1,2}),\s*(\d{4})\s*\]/s;
-const DATE_FALLBACK_REGEX = /([A-Z][a-z]+)\s+(\d{1,2}),\s*(\d{4})/;
-
-const CONTENT_SELECTORS = [
-  '.single_content',
-  '#content',
-  '#divContent',
-  '#main-content',
-  '.content-area',
-  'article',
-  '.decision-body',
-  'main',
-];
 
 export class DocumentDetailParser implements IDocumentDetailParser {
   parse(html: string, elibId: string, bookshelfId: number): ELibDocumentDetail {
     const $ = load(html);
 
-    // Remove nav/header/footer noise before extracting content
-    $('nav, header, footer, script, style, noscript').remove();
+    // Printer-friendly page: entire body is the decision with no nav noise
+    const rawHtml = $('body').html() ?? '';
+    const rawText = $('body').text().replace(/\s{3,}/g, '\n').trim();
 
-    // Find the most content-rich container
-    const foundSel =
-      CONTENT_SELECTORS.find(sel => {
-        const el = $(sel);
-        return el.length > 0 && el.text().trim().length > 200;
-      }) ?? 'body';
-    const contentEl = $(foundSel);
+    // Header is in the <h2> containing brackets: [ G.R. No. 266431, January 29, 2026 ]
+    const headerText = $('h2')
+      .filter((_, el) => HEADER_REGEX.test($(el).text()))
+      .first()
+      .text()
+      .trim();
 
-    const rawHtml = contentEl.html() ?? '';
-    const rawText = contentEl.text().replace(/\s{3,}/g, '\n').trim();
-
-    // Parse header bracket: [ G.R. No. 266431, January 29, 2026 ]
-    const headerMatch = rawText.match(HEADER_REGEX);
+    const headerMatch = headerText.match(HEADER_REGEX);
 
     let identifier = '';
     let month = '';
@@ -50,30 +34,14 @@ export class DocumentDetailParser implements IDocumentDetailParser {
       month = headerMatch[2];
       day = parseInt(headerMatch[3], 10);
       year = parseInt(headerMatch[4], 10);
-    } else {
-      const dateMatch = rawText.match(DATE_FALLBACK_REGEX);
-      if (dateMatch) {
-        month = dateMatch[1];
-        day = parseInt(dateMatch[2], 10);
-        year = parseInt(dateMatch[3], 10);
-      }
     }
 
-    // Title: the line after the header bracket containing the parties
-    const lines = rawText.split('\n').map(l => l.trim()).filter(Boolean);
-    let title = '';
-
-    if (headerMatch) {
-      const headerLineIdx = lines.findIndex(l => HEADER_REGEX.test(l));
-      if (headerLineIdx >= 0) {
-        title = lines[headerLineIdx + 1] ?? '';
-      }
-    }
-
-    if (!title) {
-      title =
-        lines.find(l => /PETITIONER|RESPONDENT|COMPLAINANT|ACCUSED/i.test(l)) ?? '';
-    }
+    // Title is in <h3>: "PARTIES...<br><br>D E C I S I O N" — strip the ruling type suffix
+    const title = $('h3')
+      .first()
+      .text()
+      .split(/D\s+E\s+C\s+I\s+S\s+I\s+O\s+N|R\s+E\s+S\s+O\s+L\s+U\s+T\s+I\s+O\s+N|O\s+R\s+D\s+E\s+R/i)[0]
+      .trim();
 
     const url = `${BASE_URL}/thebookshelf/showdocs/${bookshelfId}/${elibId}`;
 
