@@ -1,6 +1,8 @@
 export { ELibClient, elib } from './client/ELibClient.js';
+export { BookshelfResource } from './resources/BookshelfResource.js';
 export { DecisionsResource } from './resources/DecisionsResource.js';
 export { BaseResource } from './resources/BaseResource.js';
+export { Bookshelf } from './types/bookshelf.js';
 export { Month, normalizeMonth } from './types/month.js';
 export type { ELibDocument, ELibDocumentDetail } from './types/document.js';
 export type { IHttpClient } from './interfaces/IHttpClient.js';

@@ -22,6 +22,24 @@ const docs = await elib.decisions.getDocumentsByDate(Month.Jan, 2026);
 const detail = await elib.decisions.getDocumentById('70321');
 ```
 
+### Other bookshelves
+
+Laws and executive issuances share the same page layout as decisions, so any
+month-browsable bookshelf works the same way:
+
+```ts
+import { elib, Bookshelf, Month } from '@vonuyvico/supreme-court-elib-sdk';
+
+const acts = await elib.shelf(Bookshelf.RepublicActs).getDocumentsByDate(Month.Sep, 2026);
+const detail = await elib.shelf(Bookshelf.RepublicActs).getDocumentById(acts[0].elib_id);
+```
+
+`elib.decisions` is the same as `elib.shelf(Bookshelf.Decisions)`. Available
+shelves: `Decisions`, `RepublicActs`, `Constitutions`, `ExecutiveOrders`,
+`AdministrativeOrders`, `PresidentialProclamations`, `MemorandumCirculars`,
+`MemorandumOrders`, `BatasPambansa`, `PresidentialDecrees`, `Acts`,
+`CommonwealthActs`, `GeneralOrders`.
+
 ### Document shape
 
 ```ts
